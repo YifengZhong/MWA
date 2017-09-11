@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+  </head>
+  <body>
+    <p>
+      <table border="1" style="width:100%">
+          <tr>
+            <th>id</th><th>Name</th><th>Username</th><th>Email</th><th>City</th><th>Zip code</th><th>Latitude</th><th>Longitude</th><th>Website</th>
+          </tr>
+      
+          <% for (var i = 0; i < quotation.length; i++) { %>
+          <tr>
+            <td><%= quotation[i].id %></td>
+            <td><%= quotation[i].name %></td>
+            <td><%= quotation[i].username %></td>
+            <td><%= quotation[i].email %></td>
+            <td><%= quotation[i].address.city %></td>
+            <td><%= quotation[i].address.zipcode %></td>
+            <td><%= quotation[i].address.geo.lat %></td>
+            <td><%= quotation[i].address.geo.lng %></td>
+            <td><%= quotation[i].webside %></td>            
+          </tr>    
+          <% } %>
+      </table>
+    </p>
+  </body>
+</html>
