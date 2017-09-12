@@ -1,0 +1,8 @@
+{isbn:number
+ title:"",
+ authors:["","",""],
+ borrower:"",
+ borrowDate:"",
+ returnDate:"",
+ borrower_contact:""
+}
