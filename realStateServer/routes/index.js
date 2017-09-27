@@ -129,7 +129,7 @@ router.post('/search', function(req, res, next) {
   DbIns.find({$and:[query]},function(err,users) {
    console.log(Object.keys(users).length);
     res.end(users);
-  }).sort({id:1});
+  }).sort({_id:1});
 });
 
 /*  
