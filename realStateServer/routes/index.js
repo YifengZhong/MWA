@@ -1,5 +1,6 @@
 var express = require('express');
 var DbIns = require('../repository/dbIns')
+var observables = require('mongoose-observables');
 var router = express.Router();
 var multer = require('multer')
 var util = require('util')
@@ -70,7 +71,7 @@ router.post("/update",function(req,res,next){
   for (var i = 0; i < keys.length; i++) {
     query[keys[i]]=obj[keys[i]];
   }
-  DbIns.update({id:id}, query,{multi:true},function (err, user) {
+  DbIns.update({_id:id}, query,{multi:true},function (err, user) {
                 if (err) return handleError(err);
                 res.end();
             });
@@ -83,7 +84,7 @@ router.get('/', function(req, res, next) {
   DbIns.find({},function(err,users) {
     console.log(users);
     res.render('index', { title: users });
-  }).sort({id:1});
+  }).sort({_id:1});
 });
 
 /*  
@@ -97,7 +98,7 @@ router.post('/uploadpicture',upload.single('imgfile'), function(req,res,next){
       var newImg = fs.readFileSync(req.file.path);
       // encode the file as a base64 string.
       var encImg = newImg.toString('base64');
-      DbIns.update({id:req.body.id}, {$push:{img:encImg}},function (err, user) {
+      DbIns.update({_id:req.body.id}, {$push:{img:encImg}},function (err, user) {
                 if (err) return console.log("uplaod failed");
                 console.log("Success");
                 res.end();
@@ -118,9 +119,15 @@ router.post('/search', function(req, res, next) {
   for (var i = 0; i < keys.length; i++) {
     query[keys[i]]=obj[keys[i]];
   }
-
+  // var result = DbIns.find({$and:[query]});
+  // // observables.finder
+  // //   .findOne(DbIns,{$and:[query]})
+  // //   .subscribe(x=>{
+  // //               console.log("assdfasdf");
+  // //                 console.log(Object.keys(x).length);
+  // //               res.end(x);},err=>{throw err});
   DbIns.find({$and:[query]},function(err,users) {
-//    console.log(Object.keys(users).length);
+   console.log(Object.keys(users).length);
     res.end(users);
   }).sort({id:1});
 });
@@ -133,7 +140,7 @@ router.post('/searchKeyWord', function(req, res, next) {
     let keyValue = ".*"+req.body.keyArea+".*";
     DbIns.find({$or:[{otherDescription:{$regex:keyValue}},{address:{$regex:keyValue}}]},function(err,users) {
       res.end(users);
-    }).sort({id:1});
+    }).sort({_id:1});
   });
   
 /*  
@@ -154,7 +161,7 @@ router.post('/add',function(req,res,next) {
 router.post('/remove',function(req,res,next) {
   let id = req.body.id;
 
-  DbIns.remove({id:id},function(err){
+  DbIns.remove({_id:id},function(err){
     if(err) throw err;
     console.log('user removed');
     res.end();
@@ -164,7 +171,7 @@ router.post('/remove',function(req,res,next) {
 function createDoc(req) {
   return new DbIns(
     {
-      id:req.body.id,
+      _id:req.body.id,
       address:req.body.address,
       map:req.body.map,
       status:req.body.status,
