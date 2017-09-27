@@ -1,11 +1,16 @@
 var express = require('express');
 var DbIns = require('../repository/dbIns')
 var router = express.Router();
+var multer = require('multer')
+var util = require('util')
+fs = require('fs-extra')
+var upload = multer({limits: {fileSize: 2000000 },dest:'/uploads/'})
 
 
 // var oneDoc = new DbIns(
 //   { id:101,
 //     address:"1000 N 4st FairField IA",
+//        img:"",
 //     map:{latitude:90,longitude:48},
 //     status:"available",
 //     pricePerSq:124,
@@ -35,20 +40,20 @@ var router = express.Router();
 
 //   });
 
-  // oneDoc.save(function(err){
-  //   if(err) throw err;
-  //   console.log('user Saved');
-  // });
+//   oneDoc.save(function(err){
+//     if(err) throw err;
+//     console.log('user Saved');
+//   });
   // oneDoc.save(function(err){
   //   if(err) throw err;
   //   console.log('user Saved');
   // });
 
 
-   DbIns.update({}, {pricePerSq:5},{multi:true},function (err, user) {
-              if (err) return handleError(err);
-              console.log(user);
-          });
+  //  DbIns.update({}, {pricePerSq:5},{multi:true},function (err, user) {
+  //             if (err) return handleError(err);
+  //             console.log(user);
+  //         });
   // DbIns.find({status:"available"},function(err,users) {
   //   console.log(users);
   // });/* GET home page. */
@@ -59,7 +64,22 @@ router.get('/', function(req, res, next) {
     res.render('index', { title: users });
   }).sort({id:1});
 });
-
+router.post('/uploadpicture',upload.single('recfile'), function(req,res,next){
+  console.log("asdfasdf")
+  if (req.file == null) {
+    console.log("there is no file");
+  } else {
+      // read the img file from tmp in-memory location
+      var newImg = fs.readFileSync(req.file.path);
+      // encode the file as a base64 string.
+      var encImg = newImg.toString('base64');
+      DbIns.update({}, {img:encImg},function (err, user) {
+                if (err) return handleError(err);
+                console.log("Success");
+                res.end(encImg);
+            });    
+  }
+});
 router.post('/search', function(req, res, next) {
 
   let keyValue = ".*"+req.body.keyArea+".*";
@@ -73,12 +93,6 @@ router.post('/search', function(req, res, next) {
 router.post('/add',function(req,res,next) {
   console.log("asdfad");
   let oneDoc = createDoc(req);
-  // var promise = oneDoc.save();
-  // assert.ok(promise instanceof require('mpromise'));
-  // promise.then(function(err){
-  //     if(err) throw err;
-  //     console.log('user Saved');
-  //   });
   oneDoc.save(function(err){
     if(err) throw err;
     console.log('user Saved');

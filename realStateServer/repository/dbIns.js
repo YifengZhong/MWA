@@ -6,6 +6,7 @@ mongoose.connect('mongodb://root:root@ds149324.mlab.com:49324/realestate_mwa');
 var mySchema = new mongoose.Schema({
     id:Number,
     address:String,
+    img:String,
     map:{latitude:Number,longitude:Number},
     status:String,
     pricePerSq:Number,
