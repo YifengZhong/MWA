@@ -5,6 +5,7 @@ var router = express.Router();
 var multer = require('multer')
 var util = require('util')
 fs = require('fs-extra')
+var mongoose = require('mongoose');
 var upload = multer({limits: {fileSize: 2000000 },dest:'/uploads/'})
 
 
@@ -188,7 +189,10 @@ function createDoc(req) {
       garage:req.body.garage,
       heatingandCooling:req.body.heatingandCooling,
       utilities:req.body.utilities,
-      otherDescription:req.body.otherDescription
+      otherDescription:req.body.otherDescription,
+      sqft:req.body.sqft,
+      sqftlot:req.body.sqftlot
+
     }); 
 }
 module.exports = router;
