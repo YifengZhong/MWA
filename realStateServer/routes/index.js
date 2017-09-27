@@ -158,7 +158,7 @@ router.post('/remove',function(req,res,next) {
 /*  
  * add: add a new property to database
  */  
-router.post('/add',function(req,res,next) {
+router.post('/add',upload.single('imgfile'),function(req,res,next) {
   var oneDoc = createDoc(req);
   var promise = oneDoc.save();
   promise.then(function(result){
