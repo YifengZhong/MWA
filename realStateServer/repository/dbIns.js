@@ -1,5 +1,6 @@
 //import the library
 var mongoose = require('mongoose');
+mongoose.Promise = global.Promise;
 //connect to a MongoDB database
 mongoose.connect('mongodb://root:root@ds149324.mlab.com:49324/realestate_mwa');
 

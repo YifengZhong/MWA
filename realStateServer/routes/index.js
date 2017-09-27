@@ -10,15 +10,15 @@ var upload = multer({limits: {fileSize: 2000000 },dest:'/uploads/'})
 
 
 // var oneDoc = new DbIns(
-//   { _id:3,
-//     address:"2104 N 3st FairField China",
+//   { _id:4,
+//     address:"2104 N 3st Chichago China",
 //     img:undefined,
 //     map:{latitude:90,longitude:48},
 //     status:"available",
-//     pricePerSq:444,
-//     type:"Triple Family Home",
-//     built:"2013",
-//     syle:"1 Story",
+//     pricePerSq:345,
+//     type:"Double Family Home",
+//     built:"2007",
+//     syle:"3 Story",
 //     bedRooms:[{type:"master",length:11,width:22},
 //               {type:"minor",length:12,width:10},
 //               {type:"minor",length:12,width:10},
@@ -32,15 +32,15 @@ var upload = multer({limits: {fileSize: 2000000 },dest:'/uploads/'})
 //              refrigerator:true,
 //              ventFan:true},
 //     bathRooms:3,
-//     diningRoom:[{width:16,length:16}],
-//     livingRoom:[{width:16,length:18},{width:25,length:30}],
+//     diningRoom:[{width:23,length:16}],
+//     livingRoom:[{width:22,length:18},{width:25,length:30}],
 //     exterior:"Lot Square Footage: 62291.00",
 //     garage:{type:1,features:"Electric, Extra Storage",length:24,width:24},
 //     heatingandCooling:{fuelType:"Natural Gas",coolingFeature:"Central"},
 //     utilities:{waterType:"city",sewerType:"city",waterHeater:"Gas"},
 //     otherDescription:"Beautifully maintained property in Suburban Heights subdivision.",
-//     sqft:245,
-//     sqftlot:4754
+//     sqft:567,
+//     sqftlot:3332
 //   });
 
 //   oneDoc.save(function(err){
@@ -53,7 +53,7 @@ var upload = multer({limits: {fileSize: 2000000 },dest:'/uploads/'})
   // });
 
 
-  //  DbIns.update({}, {id:5,address:"yes"},{multi:true},function (err, user) {
+  //  DbIns.update({}, {_id:5,address:"yes"},{multi:true},function (err, user) {
   //             if (err) return handleError(err);
   //             console.log(user);
   //         });
@@ -62,17 +62,17 @@ var upload = multer({limits: {fileSize: 2000000 },dest:'/uploads/'})
   // });/* GET home page. */
 
 /*  
- * update: update the specific information for specified id
+ * update: update the specific information for specified _id
  */  
 router.post("/update",function(req,res,next){
   var obj = req.body;
   var keys = Object.keys(obj);
   var query={};
-  var id = req.body.id;
+  var _id = req.body._id;
   for (var i = 0; i < keys.length; i++) {
     query[keys[i]]=obj[keys[i]];
   }
-  DbIns.update({_id:id}, query,{multi:true},function (err, user) {
+  DbIns.update({_id:_id}, query,{multi:true},function (err, user) {
                 if (err) return handleError(err);
                 res.end();
             });
@@ -89,48 +89,46 @@ router.get('/', function(req, res, next) {
 });
 
 /*  
- * post: upload the pictures in database for specified id
+ * post: upload the pictures in database for specified _id
  */  
 router.post('/uploadpicture',upload.single('imgfile'), function(req,res,next){
   if (req.file == null) {
     console.log("there is no file");
   } else {
-      // read the img file from tmp in-memory location
-      var newImg = fs.readFileSync(req.file.path);
-      // encode the file as a base64 string.
-      var encImg = newImg.toString('base64');
-      DbIns.update({_id:req.body.id}, {$push:{img:encImg}},function (err, user) {
-                if (err) return console.log("uplaod failed");
-                console.log("Success");
-                res.end();
-            });    
+      savePic(req,res);
   }
 });
-
+function savePic(req,res) {
+      // read the img file from tmp in-memory location
+      let newImg = fs.readFileSync(req.file.path);
+      // encode the file as a base64 string.
+      let encImg = newImg.toString('base64');
+      DbIns.update({_id:req.body._id}, {$push:{img:encImg}},function (err, user) {
+                if (err) console.log("Upload file failed");
+                else console.log("Success");
+                res.end();
+            });    
+}
 /*  
  * search: search items under certain condition
+ * promise used
  */  
 router.post('/search', function(req, res, next) {
 
   var obj = req.body;
   var keys = Object.keys(obj);
   var query={};
-  var id = req.body.id;
+  var _id = req.body._id;
 
   for (var i = 0; i < keys.length; i++) {
     query[keys[i]]=obj[keys[i]];
   }
-  // var result = DbIns.find({$and:[query]});
-  // // observables.finder
-  // //   .findOne(DbIns,{$and:[query]})
-  // //   .subscribe(x=>{
-  // //               console.log("assdfasdf");
-  // //                 console.log(Object.keys(x).length);
-  // //               res.end(x);},err=>{throw err});
-  DbIns.find({$and:[query]},function(err,users) {
-   console.log(Object.keys(users).length);
-    res.end(users);
-  }).sort({_id:1});
+  console.log(query);
+  var promise = DbIns.find({$and:[query]}).exec();
+  promise.then(function(properties){
+    console.log(Object.keys(properties).length);
+    res.end(properties);
+  })
 });
 
 /*  
@@ -145,34 +143,37 @@ router.post('/searchKeyWord', function(req, res, next) {
   });
   
 /*  
- * add: add a new property to database
- */  
-router.post('/add',function(req,res,next) {
-  let oneDoc = createDoc(req);
-  oneDoc.save(function(err){
-    if(err) throw err;
-    res.end();
-    console.log('user Saved');
-  });
-})
-
-/*  
- * add: remove a specified property by id
+ * add: remove a specified property by _id
  */  
 router.post('/remove',function(req,res,next) {
-  let id = req.body.id;
+  let _id = req.body._id;
 
-  DbIns.remove({_id:id},function(err){
+  DbIns.remove({_id:_id},function(err){
     if(err) throw err;
     console.log('user removed');
     res.end();
   });
 })
 
+/*  
+ * add: add a new property to database
+ */  
+router.post('/add',function(req,res,next) {
+  var oneDoc = createDoc(req);
+  var promise = oneDoc.save();
+  promise.then(function(result){
+    console.log('user Saved');
+    savePic(req,res);
+  });
+})
+
+
 function createDoc(req) {
+  console.log(req.body._id);
   return new DbIns(
     {
-      _id:req.body.id,
+      _id:req.body._id,
+      img:undefined,
       address:req.body.address,
       map:req.body.map,
       status:req.body.status,
@@ -192,7 +193,6 @@ function createDoc(req) {
       otherDescription:req.body.otherDescription,
       sqft:req.body.sqft,
       sqftlot:req.body.sqftlot
-
     }); 
 }
 module.exports = router;
