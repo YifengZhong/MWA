@@ -10,7 +10,7 @@ var upload = multer({limits: {fileSize: 2000000 },dest:'/uploads/'})
 // var oneDoc = new DbIns(
 //   { id:101,
 //     address:"1000 N 4st FairField IA",
-//        img:"",
+//     img:"",
 //     map:{latitude:90,longitude:48},
 //     status:"available",
 //     pricePerSq:124,
@@ -50,22 +50,35 @@ var upload = multer({limits: {fileSize: 2000000 },dest:'/uploads/'})
   // });
 
 
-  //  DbIns.update({}, {pricePerSq:5},{multi:true},function (err, user) {
+  //  DbIns.update({}, {id:5,address:"yes"},{multi:true},function (err, user) {
   //             if (err) return handleError(err);
   //             console.log(user);
   //         });
   // DbIns.find({status:"available"},function(err,users) {
   //   console.log(users);
   // });/* GET home page. */
-
+router.post("/update",function(req,res,next){
+  var obj = req.body;
+  var keys = Object.keys(obj);
+  var query={};
+  var id = req.body.id;
+  for (var i = 0; i < keys.length; i++) {
+    query[keys[i]]=obj[keys[i]];
+  }
+  DbIns.update({id:id}, query,{multi:true},function (err, user) {
+                if (err) return handleError(err);
+                console.log(user);
+            });
+  console.log(sql);
+  
+})
 router.get('/', function(req, res, next) {
   DbIns.find({},function(err,users) {
     console.log(users);
     res.render('index', { title: users });
   }).sort({id:1});
 });
-router.post('/uploadpicture',upload.single('recfile'), function(req,res,next){
-  console.log("asdfasdf")
+router.post('/uploadpicture',upload.single('imgfile'), function(req,res,next){
   if (req.file == null) {
     console.log("there is no file");
   } else {
@@ -73,10 +86,10 @@ router.post('/uploadpicture',upload.single('recfile'), function(req,res,next){
       var newImg = fs.readFileSync(req.file.path);
       // encode the file as a base64 string.
       var encImg = newImg.toString('base64');
-      DbIns.update({}, {img:encImg},function (err, user) {
+      DbIns.update({id:req.body.id}, {$push:{img:encImg}},function (err, user) {
                 if (err) return handleError(err);
                 console.log("Success");
-                res.end(encImg);
+                res.end();
             });    
   }
 });
@@ -91,7 +104,6 @@ router.post('/search', function(req, res, next) {
 
 
 router.post('/add',function(req,res,next) {
-  console.log("asdfad");
   let oneDoc = createDoc(req);
   oneDoc.save(function(err){
     if(err) throw err;
@@ -101,7 +113,7 @@ router.post('/add',function(req,res,next) {
 
 router.post('/remove',function(req,res,next) {
   let id = req.body.id;
-  console.log("remove...: "+id);
+
   DbIns.remove({id:id},function(err){
     if(err) throw err;
     console.log('user removed');
