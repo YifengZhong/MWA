@@ -4,7 +4,7 @@ var mongoose = require('mongoose');
 mongoose.connect('mongodb://root:root@ds149324.mlab.com:49324/realestate_mwa');
 
 var mySchema = new mongoose.Schema({
-    id:Number,
+    _id:Number,
     address:String,
     img:[String],
     map:{latitude:Number,longitude:Number},
@@ -29,7 +29,9 @@ var mySchema = new mongoose.Schema({
     garage:{type:Boolean,features:String,length:Number,width:Number},
     heatingandCooling:{fuelType:String,coolingFeature:String},
     utilities:{waterType:String,sewerType:String,waterHeater:String},
-    otherDescription:String
+    otherDescription:String,
+    sqft:Number,
+    sqftlot:Number
 });
 var DbIns = mongoose.model('realstate', mySchema);
 

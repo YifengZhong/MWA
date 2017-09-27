@@ -8,14 +8,14 @@ var upload = multer({limits: {fileSize: 2000000 },dest:'/uploads/'})
 
 
 // var oneDoc = new DbIns(
-//   { id:101,
-//     address:"1000 N 4st FairField IA",
-//     img:"",
+//   { _id:3,
+//     address:"2104 N 3st FairField China",
+//     img:undefined,
 //     map:{latitude:90,longitude:48},
 //     status:"available",
-//     pricePerSq:124,
-//     type:"Single Family Home",
-//     built:"2017",
+//     pricePerSq:444,
+//     type:"Triple Family Home",
+//     built:"2013",
 //     syle:"1 Story",
 //     bedRooms:[{type:"master",length:11,width:22},
 //               {type:"minor",length:12,width:10},
@@ -29,15 +29,16 @@ var upload = multer({limits: {fileSize: 2000000 },dest:'/uploads/'})
 //              gas:true,
 //              refrigerator:true,
 //              ventFan:true},
-//     bathRooms:2,
-//     diningRoom:[{width:15,length:16}],
-//     livingRoom:[{width:20,length:18},{width:24,length:30}],
+//     bathRooms:3,
+//     diningRoom:[{width:16,length:16}],
+//     livingRoom:[{width:16,length:18},{width:25,length:30}],
 //     exterior:"Lot Square Footage: 62291.00",
 //     garage:{type:1,features:"Electric, Extra Storage",length:24,width:24},
 //     heatingandCooling:{fuelType:"Natural Gas",coolingFeature:"Central"},
 //     utilities:{waterType:"city",sewerType:"city",waterHeater:"Gas"},
-//     otherDescription:"Beautifully maintained property in Suburban Heights subdivision."
-
+//     otherDescription:"Beautifully maintained property in Suburban Heights subdivision.",
+//     sqft:245,
+//     sqftlot:4754
 //   });
 
 //   oneDoc.save(function(err){
@@ -57,6 +58,10 @@ var upload = multer({limits: {fileSize: 2000000 },dest:'/uploads/'})
   // DbIns.find({status:"available"},function(err,users) {
   //   console.log(users);
   // });/* GET home page. */
+
+/*  
+ * update: update the specific information for specified id
+ */  
 router.post("/update",function(req,res,next){
   var obj = req.body;
   var keys = Object.keys(obj);
@@ -67,17 +72,23 @@ router.post("/update",function(req,res,next){
   }
   DbIns.update({id:id}, query,{multi:true},function (err, user) {
                 if (err) return handleError(err);
-                console.log(user);
+                res.end();
             });
-  console.log(sql);
-  
 })
+
+/*  
+ * get: get all the data from data base
+ */  
 router.get('/', function(req, res, next) {
   DbIns.find({},function(err,users) {
     console.log(users);
     res.render('index', { title: users });
   }).sort({id:1});
 });
+
+/*  
+ * post: upload the pictures in database for specified id
+ */  
 router.post('/uploadpicture',upload.single('imgfile'), function(req,res,next){
   if (req.file == null) {
     console.log("there is no file");
@@ -87,30 +98,59 @@ router.post('/uploadpicture',upload.single('imgfile'), function(req,res,next){
       // encode the file as a base64 string.
       var encImg = newImg.toString('base64');
       DbIns.update({id:req.body.id}, {$push:{img:encImg}},function (err, user) {
-                if (err) return handleError(err);
+                if (err) return console.log("uplaod failed");
                 console.log("Success");
                 res.end();
             });    
   }
 });
+
+/*  
+ * search: search items under certain condition
+ */  
 router.post('/search', function(req, res, next) {
 
-  let keyValue = ".*"+req.body.keyArea+".*";
-  let built = req.body.built;
-    DbIns.find({$and:[{built:built},{address:{$regex:keyValue}}]},function(err,users) {
-    res.end();
+  var obj = req.body;
+  var keys = Object.keys(obj);
+  var query={};
+  var id = req.body.id;
+
+  for (var i = 0; i < keys.length; i++) {
+    query[keys[i]]=obj[keys[i]];
+  }
+
+  DbIns.find({$and:[query]},function(err,users) {
+//    console.log(Object.keys(users).length);
+    res.end(users);
   }).sort({id:1});
 });
 
-
+/*  
+ * search: search items by keywords in otherDescription and address fileds
+ */  
+router.post('/searchKeyWord', function(req, res, next) {
+  
+    let keyValue = ".*"+req.body.keyArea+".*";
+    DbIns.find({$or:[{otherDescription:{$regex:keyValue}},{address:{$regex:keyValue}}]},function(err,users) {
+      res.end(users);
+    }).sort({id:1});
+  });
+  
+/*  
+ * add: add a new property to database
+ */  
 router.post('/add',function(req,res,next) {
   let oneDoc = createDoc(req);
   oneDoc.save(function(err){
     if(err) throw err;
+    res.end();
     console.log('user Saved');
   });
 })
 
+/*  
+ * add: remove a specified property by id
+ */  
 router.post('/remove',function(req,res,next) {
   let id = req.body.id;
 
