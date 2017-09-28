@@ -9,14 +9,7 @@ fs = require('fs-extra')
 var mongoose = require('mongoose');
 var upload = multer({limits: {fileSize: 2000000 },dest:'/uploads/'})
 
-// var oneDoc = new dbId(
-//     { _id:"item_id",
-//       sequence_value:1
-// });
-// oneDoc.save(function(err){
-//       if(err) throw err;
-//       console.log('user Saved');
-//     });
+
 /*  
  * update: update the specific information for specified _id
  */  
@@ -71,32 +64,34 @@ function savePic(req,res,id) {
  */  
 router.post('/search', function(req, res, next) {
 
-  var obj = req.body;
-  var keys = Object.keys(obj);
-  var query={};
-  var _id = req.body._id;
+  res.redirect('/search');
+  // var obj = req.body;
+  // var keys = Object.keys(obj);
+  // var query={};
+  // var _id = req.body._id;
 
-  for (var i = 0; i < keys.length; i++) {
-    query[keys[i]]=obj[keys[i]];
-  }
-  console.log(query);
-  var promise = DbIns.find({$and:[query]}).exec();
-  promise.then(function(properties){
-    console.log(Object.keys(properties).length);
-    res.end(properties);
-  })
+  // for (var i = 0; i < keys.length; i++) {
+  //   query[keys[i]]=obj[keys[i]];
+  // }
+  // console.log(query);
+  // var promise = DbIns.find({$and:[query]}).exec();
+  // promise.then(function(properties){
+  //   console.log(Object.keys(properties).length);
+  //   res.end(properties);
+  // })
 });
 
 /*  
  * search: search items by keywords in otherDescription and address fileds
  */  
 router.post('/searchKeyWord', function(req, res, next) {
-  
-    let keyValue = ".*"+req.body.keyArea+".*";
-    DbIns.find({$or:[{otherDescription:{$regex:keyValue}},{address:{$regex:keyValue}}]},function(err,users) {
-      res.end(users);
-    }).sort({_id:1});
-  });
+    res.redirect('/searchKeyWord');
+  //   let keyValue = ".*"+req.body.keyArea+".*";
+  //   DbIns.find({$or:[{otherDescription:{$regex:keyValue}},{address:{$regex:keyValue}}]},function(err,users) {
+  //     res.end(users);
+  //   }).sort({_id:1});
+  // }
+});
   
 /*  
  * add: remove a specified property by _id
@@ -116,13 +111,8 @@ router.post('/remove',function(req,res,next) {
  */  
 router.post('/add',upload.single('imgfile'),function(req,res,next) {
   var oneDoc = createDoc(req,res,next);
-
 })
-
-
-
 function getValueForNextSequence(req,res,next){
-
   dbId.update({},{$inc:{sequence_value:1}},{multi:true},function (err, doc) {
     if (err) console.log("Update failed");
     else {
