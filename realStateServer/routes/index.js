@@ -1,5 +1,6 @@
 var express = require('express');
-var DbIns = require('../repository/dbIns')
+var DbIns = require('../repository/real');
+var dbId = require('../repository/idSequence');
 var observables = require('mongoose-observables');
 var router = express.Router();
 var multer = require('multer')
@@ -8,59 +9,14 @@ fs = require('fs-extra')
 var mongoose = require('mongoose');
 var upload = multer({limits: {fileSize: 2000000 },dest:'/uploads/'})
 
-
-// var oneDoc = new DbIns(
-//   { _id:4,
-//     address:"2104 N 3st Chichago China",
-//     img:undefined,
-//     map:{latitude:90,longitude:48},
-//     status:"available",
-//     pricePerSq:345,
-//     type:"Double Family Home",
-//     built:"2007",
-//     syle:"3 Story",
-//     bedRooms:[{type:"master",length:11,width:22},
-//               {type:"minor",length:12,width:10},
-//               {type:"minor",length:12,width:10},
-//               {type:"minor",length:11,width:11}],
-//     kitchen:{
-//              cabinets:true,
-//              dishWasher:true,
-//              Disposal:true,
-//              microwave:true,
-//              gas:true,
-//              refrigerator:true,
-//              ventFan:true},
-//     bathRooms:3,
-//     diningRoom:[{width:23,length:16}],
-//     livingRoom:[{width:22,length:18},{width:25,length:30}],
-//     exterior:"Lot Square Footage: 62291.00",
-//     garage:{type:1,features:"Electric, Extra Storage",length:24,width:24},
-//     heatingandCooling:{fuelType:"Natural Gas",coolingFeature:"Central"},
-//     utilities:{waterType:"city",sewerType:"city",waterHeater:"Gas"},
-//     otherDescription:"Beautifully maintained property in Suburban Heights subdivision.",
-//     sqft:567,
-//     sqftlot:3332
-//   });
-
-//   oneDoc.save(function(err){
-//     if(err) throw err;
-//     console.log('user Saved');
-//   });
-  // oneDoc.save(function(err){
-  //   if(err) throw err;
-  //   console.log('user Saved');
-  // });
-
-
-  //  DbIns.update({}, {_id:5,address:"yes"},{multi:true},function (err, user) {
-  //             if (err) return handleError(err);
-  //             console.log(user);
-  //         });
-  // DbIns.find({status:"available"},function(err,users) {
-  //   console.log(users);
-  // });/* GET home page. */
-
+// var oneDoc = new dbId(
+//     { _id:"item_id",
+//       sequence_value:1
+// });
+// oneDoc.save(function(err){
+//       if(err) throw err;
+//       console.log('user Saved');
+//     });
 /*  
  * update: update the specific information for specified _id
  */  
@@ -95,17 +51,17 @@ router.post('/uploadpicture',upload.single('imgfile'), function(req,res,next){
   if (req.file == null) {
     console.log("there is no file");
   } else {
-      savePic(req,res);
+      savePic(req,res,req.body._id);
   }
 });
-function savePic(req,res) {
+function savePic(req,res,id) {
       // read the img file from tmp in-memory location
       let newImg = fs.readFileSync(req.file.path);
       // encode the file as a base64 string.
       let encImg = newImg.toString('base64');
-      DbIns.update({_id:req.body._id}, {$push:{img:encImg}},function (err, user) {
+      DbIns.update({_id:id}, {$push:{img:encImg}},function (err, user) {
                 if (err) console.log("Upload file failed");
-                else console.log("Success");
+                else console.log("Image saved");
                 res.end();
             });    
 }
@@ -159,40 +115,54 @@ router.post('/remove',function(req,res,next) {
  * add: add a new property to database
  */  
 router.post('/add',upload.single('imgfile'),function(req,res,next) {
-  var oneDoc = createDoc(req);
-  var promise = oneDoc.save();
-  promise.then(function(result){
-    console.log('user Saved');
-    savePic(req,res);
-  });
+  var oneDoc = createDoc(req,res,next);
+
 })
 
 
-function createDoc(req) {
-  console.log(req.body._id);
-  return new DbIns(
-    {
-      _id:req.body._id,
-      img:undefined,
-      address:req.body.address,
-      map:req.body.map,
-      status:req.body.status,
-      pricePerSq:req.body.pricePerSq,
-      type:req.body.type,
-      built:req.body.built,
-      style:req.body.style,
-      bedRooms:req.body.bedRooms,
-      kitchen:req.body.kitchen,
-      bathRooms:req.body.bathRooms,
-      diningRoom:req.body.diningRoom,
-      livingRoom:req.body.livingRoom,
-      exterior:req.body.exterior,
-      garage:req.body.garage,
-      heatingandCooling:req.body.heatingandCooling,
-      utilities:req.body.utilities,
-      otherDescription:req.body.otherDescription,
-      sqft:req.body.sqft,
-      sqftlot:req.body.sqftlot
-    }); 
+
+function getValueForNextSequence(req,res,next){
+
+  dbId.update({},{$inc:{sequence_value:1}},{multi:true},function (err, doc) {
+    if (err) console.log("Update failed");
+    else {
+      dbId.findOne({},function(err,doc){
+        var id = doc.sequence_value;
+        let instance = new DbIns(
+          {
+            _id:doc.sequence_value,
+            img:undefined,
+            address:req.body.address,
+            map:req.body.map,
+            status:req.body.status,
+            pricePerSq:req.body.pricePerSq,
+            type:req.body.type,
+            built:req.body.built,
+            style:req.body.style,
+            bedRooms:req.body.bedRooms,
+            kitchen:req.body.kitchen,
+            bathRooms:req.body.bathRooms,
+            diningRoom:req.body.diningRoom,
+            livingRoom:req.body.livingRoom,
+            exterior:req.body.exterior,
+            garage:req.body.garage,
+            heatingandCooling:req.body.heatingandCooling,
+            utilities:req.body.utilities,
+            otherDescription:req.body.otherDescription,
+            sqft:req.body.sqft,
+            sqftlot:req.body.sqftlot
+          }); 
+          var promise = instance.save();
+          promise.then(function(result){
+            console.log('user Saved');
+            savePic(req,res,id);
+          });    
+      });      
+   }
+ });
+}
+
+function createDoc(req,res,next) {
+  getValueForNextSequence(req,res,next)
 }
 module.exports = router;
